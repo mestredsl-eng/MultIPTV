@@ -1,0 +1,4 @@
+2026-06-05 23:41:40,286 - iptv_manager.config - INFO - Keywords carregadas de C:\Users\mestr\OneDrive\Documentos\IPTV\config\keywords.json
+2026-06-05 23:41:40,290 - iptv_manager.config - INFO - Category mapping carregado de C:\Users\mestr\OneDrive\Documentos\IPTV\config\category_mapping.yaml
+2026-06-05 23:41:40,745 - iptv_manager.downloader - INFO - Nenhum arquivo de cache antigo encontrado
+2026-06-05 23:41:40,745 - iptv_manager.tmdb_client - INFO - TMDB client initialized
