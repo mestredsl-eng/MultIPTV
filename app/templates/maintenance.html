@@ -1,0 +1,817 @@
+{% extends "base.html" %}
+
+{% block title %}Manutenção - Mestre IPTV Manager{% endblock %}
+
+{% block content %}
+<div class="row fade-in">
+    <div class="col-12">
+        <h1 class="mb-4">
+            <i class="bi bi-gear"></i> Manutenção
+        </h1>
+    </div>
+</div>
+
+<!-- Maintenance Tools -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-tools"></i> Ferramentas de Manutenção
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <button class="btn btn-info w-100 mb-2" onclick="checkMissingYears()">
+                            <i class="bi bi-search"></i> Verificar Anos Faltantes
+                        </button>
+                        <button class="btn btn-primary w-100" onclick="enrichTMDB()">
+                            <i class="bi bi-database"></i> Enriquecer TMDB
+                        </button>
+                        <small class="text-muted">Verificar e enriquecer Movies com dados TMDB</small>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <button class="btn btn-success w-100" onclick="generateTVM3U()">
+                            <i class="bi bi-file-earmark-play"></i> Gerar TV M3U + EPG
+                        </button>
+                        <small class="text-muted">Gerar tv.m3u e epg.xml compatíveis com Jellyfin</small>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <button class="btn btn-info w-100 mb-2" onclick="validateShortNames()">
+                            <i class="bi bi-film"></i> Validar Nomes Curtos (TMDB)
+                        </button>
+                        <button class="btn btn-danger w-100 mb-2" onclick="blacklistUnvalidated()">
+                            <i class="bi bi-shield-x"></i> Blacklist Não Validados
+                        </button>
+                        <button class="btn btn-secondary w-100" onclick="loadValidationStats()">
+                            <i class="bi bi-arrow-clockwise"></i> Atualizar Estatísticas
+                        </button>
+                        <small class="text-muted">Valida filmes com ≤2 palavras (prioridade alta) e corrige nomes automaticamente</small>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <button class="btn btn-warning w-100" onclick="resetExported()">
+                            <i class="bi bi-arrow-counterclockwise"></i> Reset Exportados
+                        </button>
+                        <small class="text-muted">Limpar tabela de exportados para reexportar</small>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <button class="btn btn-info w-100" onclick="fixDuplicates()">
+                            <i class="bi bi-files"></i> Corrigir Duplicados
+                        </button>
+                        <small class="text-muted">Corrigir duplicados por qualidade</small>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <button class="btn btn-primary w-100" onclick="removeYears()">
+                            <i class="bi bi-calendar-x"></i> Remover Anos dos Nomes
+                        </button>
+                        <small class="text-muted">Remover anos dos nomes e blacklist duplicados</small>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <button class="btn btn-danger w-100" onclick="cleanGallery()">
+                            <i class="bi bi-arrow-counterclockwise"></i> Resetar Galeria
+                        </button>
+                        <small class="text-muted">Marcar todas as mídias para re-exportação</small>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <button class="btn btn-secondary w-100" onclick="cleanGalleryDuplicates()">
+                            <i class="bi bi-trash2"></i> Limpar Duplicados Galeria
+                        </button>
+                        <small class="text-muted">Remover arquivos .strm duplicados da galeria</small>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <button class="btn btn-dark w-100" onclick="cleanUrlDuplicates()">
+                            <i class="bi bi-link"></i> Limpar Duplicados URL
+                        </button>
+                        <small class="text-muted">Remover mídias com URLs duplicadas</small>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <button class="btn btn-danger w-100" onclick="cleanBlacklist()">
+                            <i class="bi bi-trash"></i> Limpar Blacklist Galeria
+                        </button>
+                        <small class="text-muted">Remover arquivos .strm de itens na blacklist</small>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <button class="btn btn-warning w-100" onclick="fixDuplicateQuality()">
+                            <i class="bi bi-stars"></i> Corrigir Duplicatas (Qualidade)
+                        </button>
+                        <small class="text-muted">Detectar duplicatas e marcar pior qualidade como blacklist</small>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <button class="btn btn-secondary w-100" onclick="cleanExactDuplicates()">
+                            <i class="bi bi-copy"></i> Limpar Duplicatas Idênticas
+                        </button>
+                        <small class="text-muted">Remover registros com nomes idênticos</small>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <button class="btn btn-danger w-100" onclick="blacklistDuplicatesLowestQuality()">
+                            <i class="bi bi-shield-x"></i> Blacklist Duplicatas (Menor Qualidade)
+                        </button>
+                        <small class="text-muted">Mantém menor qualidade, marca maior qualidade como blacklist</small>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <button class="btn btn-success w-100" onclick="downloadEPG()">
+                            <i class="bi bi-download"></i> Baixar EPG
+                        </button>
+                        <small class="text-muted">Baixar guia de programação EPG para Jellyfin</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- TMDB Validation Statistics -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-film"></i> Estatísticas de Validação TMDB
+            </div>
+            <div class="card-body">
+                <div class="row" id="validationStats">
+                    <div class="col-md-3 mb-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="card-title">Total de Filmes</h5>
+                                <h3 class="card-text" id="moviesTotal">-</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="card-title">Precisando Validação</h5>
+                                <h3 class="card-text text-warning" id="moviesNeedingValidation">-</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="card-title">Validados</h5>
+                                <h3 class="card-text text-success" id="moviesValidated">-</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="card-title">Não Encontrados</h5>
+                                <h3 class="card-text text-danger" id="moviesNotFound">-</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- IPTV Sources Table -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                Fontes IPTV
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-dark table-striped">
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>URL M3U</th>
+                                <th>URL EPG</th>
+                                <th>Mídias</th>
+                                <th>Última Atualização</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="iptvTableBody">
+                            <tr>
+                                <td colspan="7" class="text-center">Carregando...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Remove Confirmation Modal -->
+<div class="modal fade" id="removeModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar Remoção</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <p>Tem certeza que deseja remover esta IPTV?</p>
+                <p>Itens afetados: <strong id="affectedItems">0</strong></p>
+                <div class="mb-3">
+                    <label for="confirmName" class="form-label">Digite o nome da IPTV para confirmar:</label>
+                    <input type="text" class="form-control" id="confirmName" onkeyup="checkConfirmation()">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="btnConfirmRemove" disabled>Confirmar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Progress Modal -->
+<div class="modal fade" id="progressModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="progressTitle">Processando...</h5>
+            </div>
+            <div class="modal-body">
+                <div class="progress mb-3">
+                    <div class="progress-bar" id="progressBar" role="progressbar" aria-label="Progresso da operação" style="width: 0%"></div>
+                </div>
+                <p id="progressMessage">Iniciando...</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let currentIptvName = '';
+let currentIptvId = '';
+
+// Load IPTV sources on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadIptvSources();
+});
+
+function loadIptvSources() {
+    fetch('/api/iptv/sources')
+        .then(response => response.json())
+        .then(data => {
+            const tbody = document.getElementById('iptvTableBody');
+            tbody.innerHTML = '';
+
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center">Nenhuma fonte IPTV cadastrada</td></tr>';
+                return;
+            }
+
+            data.forEach(iptv => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${iptv.nome}</td>
+                    <td><a href="${iptv.url_m3u}" target="_blank" class="text-info">${iptv.url_m3u.substring(0, 50)}...</a></td>
+                    <td><a href="${iptv.url_epg}" target="_blank" class="text-info">${iptv.url_epg.substring(0, 50)}...</a></td>
+                    <td>${iptv.media_count || 0}</td>
+                    <td>${iptv.ultima_atualizacao || '-'}</td>
+                    <td><span class="badge ${iptv.ativo ? 'bg-success' : 'bg-danger'}">${iptv.ativo ? 'Ativo' : 'Inativo'}</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-danger" onclick="showRemoveModal('${iptv.nome}', ${iptv.id}, ${iptv.media_count || 0})">
+                            <i class="bi bi-trash"></i> Remover
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        })
+        .catch(error => {
+            console.error('Error loading IPTV sources:', error);
+            document.getElementById('iptvTableBody').innerHTML = '<tr><td colspan="7" class="text-center text-danger">Erro ao carregar fontes IPTV</td></tr>';
+        });
+}
+
+function showRemoveModal(iptvName, iptvId, mediaCount) {
+    currentIptvName = iptvName;
+    currentIptvId = iptvId;
+    document.getElementById('confirmName').value = '';
+    document.getElementById('btnConfirmRemove').disabled = true;
+    
+    // Update affected items count
+    document.getElementById('affectedItems').textContent = mediaCount || 0;
+
+    const modal = new bootstrap.Modal(document.getElementById('removeModal'));
+    modal.show();
+}
+
+function checkConfirmation() {
+    const inputName = document.getElementById('confirmName').value;
+    document.getElementById('btnConfirmRemove').disabled = (inputName !== currentIptvName);
+}
+
+document.getElementById('btnConfirmRemove').addEventListener('click', function() {
+    fetch(`/api/iptv/sources/${currentIptvId}`, {
+        method: 'DELETE'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const modal = bootstrap.Modal.getInstance(document.getElementById('removeModal'));
+            modal.hide();
+            const affectedMsg = data.affected_media ? ` (${data.affected_media} mídias afetadas)` : '';
+            alert('IPTV removida com sucesso' + affectedMsg);
+            loadIptvSources(); // Reload the table
+        } else {
+            alert('Erro ao remover IPTV: ' + (data.error || 'Erro desconhecido'));
+        }
+    })
+    .catch(error => {
+        alert('Erro ao remover IPTV: ' + error);
+    });
+});
+
+// Maintenance Tool Functions
+function showProgress(title) {
+    document.getElementById('progressTitle').textContent = title;
+    document.getElementById('progressBar').style.width = '0%';
+    document.getElementById('progressMessage').textContent = 'Iniciando...';
+    const modal = new bootstrap.Modal(document.getElementById('progressModal'));
+    modal.show();
+}
+
+function updateProgress(percent, message) {
+    document.getElementById('progressBar').style.width = percent + '%';
+    document.getElementById('progressMessage').textContent = message;
+}
+
+function hideProgress() {
+    const modal = bootstrap.Modal.getInstance(document.getElementById('progressModal'));
+    if (modal) {
+        modal.hide();
+    }
+}
+
+function enrichTMDB() {
+    if (!confirm('Deseja enriquecer TODAS as Movies (Filmes) sem ano com dados da TMDB? Isso pode levar bastante tempo dependendo da quantidade de filmes.')) {
+        return;
+    }
+
+    showProgress('Enriquecendo TMDB');
+
+    fetch('/api/enrich/years-from-tmdb-all', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({})
+    })
+    .then(response => response.json())
+    .then(data => {
+        hideProgress();
+        if (data.success) {
+            const stats = data.stats || {};
+            alert(data.message + '\n\n' +
+                  `Total processados: ${stats.total_processed || 0}\n` +
+                  `Atualizados: ${stats.updated || 0}\n` +
+                  `Não encontrados: ${stats.not_found || 0}\n` +
+                  `Erros: ${stats.errors || 0}\n` +
+                  `Duração: ${stats.duration || 0}s`);
+        } else {
+            alert('Erro: ' + (data.error || 'Erro desconhecido'));
+        }
+    })
+    .catch(error => {
+        hideProgress();
+        alert('Erro: ' + error);
+    });
+}
+
+// Polling de progresso para enriquecimento TMDB
+let tmdbProgressInterval = null;
+
+function checkTMDBProgress() {
+    fetch('/api/enrich/tmdb-progress')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.status === 'running') {
+                updateProgress(data.progress, data.message);
+                
+                // Continuar polling se ainda estiver rodando
+                if (data.status === 'running') {
+                    setTimeout(checkTMDBProgress, 1000);
+                }
+            } else if (data.status === 'completed') {
+                // Enriquecimento concluído
+                if (tmdbProgressInterval) {
+                    clearInterval(tmdbProgressInterval);
+                    tmdbProgressInterval = null;
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Erro ao verificar progresso:', error);
+        });
+}
+
+function checkMissingYears() {
+    showProgress('Verificando Anos Faltantes');
+
+    fetch('/api/enrich/check-missing-years', {
+        method: 'GET'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            hideProgress();
+            const stats = data.stats || {};
+            const examples = data.examples || [];
+
+            let message = `Status de Anos em Filmes:\n\n`;
+            message += `Total de Filmes: ${stats.total_movies || 0}\n`;
+            message += `Com Ano: ${stats.with_years || 0}\n`;
+            message += `Sem Ano: ${stats.missing_years || 0}\n`;
+
+            if (examples.length > 0) {
+                message += `\nExemplos sem ano:\n`;
+                examples.slice(0, 5).forEach((ex, i) => {
+                    message += `${i + 1}. ${ex.nome_da_midia}\n`;
+                });
+            }
+
+            if (stats.missing_years > 0) {
+                message += `\n\nDeseja enriquecer os ${stats.missing_years} filmes sem ano?`;
+                if (confirm(message)) {
+                    enrichTMDB();
+                }
+            } else {
+                alert(message + '\n\nTodos os filmes já têm ano!');
+            }
+        } else {
+            hideProgress();
+            alert('Erro: ' + (data.error || 'Erro desconhecido'));
+        }
+    })
+    .catch(error => {
+        hideProgress();
+        alert('Erro: ' + error);
+    });
+}
+
+function resetExported() {
+    if (!confirm('Deseja limpar a tabela de exportados? Isso forçará a reexportação de todas as mídias.')) {
+        return;
+    }
+
+    showProgress('Resetando Exportados');
+
+    fetch('/api/maintenance/reset-exported', {
+        method: 'POST'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            updateProgress(100, 'Concluído!');
+            setTimeout(() => {
+                hideProgress();
+                alert(data.message);
+            }, 1000);
+        } else {
+            hideProgress();
+            alert('Erro: ' + (data.error || 'Erro desconhecido'));
+        }
+    })
+    .catch(error => {
+        hideProgress();
+        alert('Erro: ' + error);
+    });
+}
+
+function fixDuplicates() {
+    if (!confirm('Deseja corrigir duplicados por qualidade? Isso marcará itens de menor qualidade como blacklist.')) {
+        return;
+    }
+
+    showProgress('Corrigindo Duplicados');
+
+    fetch('/api/maintenance/fix-duplicates', {
+        method: 'POST'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            updateProgress(100, 'Concluído!');
+            setTimeout(() => {
+                hideProgress();
+                alert(data.message);
+            }, 1000);
+        } else {
+            hideProgress();
+            alert('Erro: ' + (data.error || 'Erro desconhecido'));
+        }
+    })
+    .catch(error => {
+        hideProgress();
+        alert('Erro: ' + error);
+    });
+}
+
+function removeYears() {
+    showProgress('Removendo Anos dos Nomes');
+
+    fetch('/api/maintenance/remove-years', {
+        method: 'POST'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            updateProgress(100, 'Concluído!');
+            setTimeout(() => {
+                hideProgress();
+                alert(data.message);
+            }, 1000);
+        } else {
+            hideProgress();
+            alert('Erro: ' + (data.error || 'Erro desconhecido'));
+        }
+    })
+    .catch(error => {
+        hideProgress();
+        alert('Erro: ' + error);
+    });
+}
+
+function cleanGallery() {
+    if (!confirm('Deseja resetar a galeria? Isso marcará todas as mídias para re-exportação na próxima execução do exportador.')) {
+        return;
+    }
+
+    showProgress('Resetando Galeria');
+
+    fetch('/api/maintenance/clean-gallery', {
+        method: 'POST'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            updateProgress(100, 'Concluído!');
+            setTimeout(() => {
+                hideProgress();
+                alert(data.message);
+            }, 1000);
+        } else {
+            hideProgress();
+            alert('Erro: ' + (data.error || 'Erro desconhecido'));
+        }
+    })
+    .catch(error => {
+        hideProgress();
+        alert('Erro: ' + error);
+    });
+}
+
+function cleanGalleryDuplicates() {
+    if (!confirm('Deseja limpar duplicados da galeria? Isso removerá arquivos .strm duplicados.')) {
+        return;
+    }
+
+    showProgress('Limpando Duplicados da Galeria');
+
+    fetch('/api/maintenance/clean-gallery-duplicates', {
+        method: 'POST'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            updateProgress(100, 'Concluído!');
+            setTimeout(() => {
+                hideProgress();
+                alert(data.message);
+            }, 1000);
+        } else {
+            hideProgress();
+            alert('Erro: ' + (data.error || 'Erro desconhecido'));
+        }
+    })
+    .catch(error => {
+        hideProgress();
+        alert('Erro: ' + error);
+    });
+}
+
+function downloadEPG() {
+    if (!confirm('Deseja baixar o guia de programação EPG? Isso baixará e processará o EPG das fontes IPTV.')) {
+        return;
+    }
+
+    showProgress('Baixando EPG');
+
+    fetch('/api/maintenance/download-epg', {
+        method: 'POST'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            updateProgress(100, 'Concluído!');
+            setTimeout(() => {
+                hideProgress();
+                alert(data.message);
+            }, 1000);
+        } else {
+            hideProgress();
+            alert('Erro: ' + (data.error || 'Erro desconhecido'));
+        }
+    })
+    .catch(error => {
+        hideProgress();
+        alert('Erro: ' + error);
+    });
+}
+
+function cleanUrlDuplicates() {
+    if (!confirm('Deseja limpar duplicados de URL? Isso removerá mídias com URLs duplicadas do banco de dados.')) {
+        return;
+    }
+
+    showProgress('Limpando Duplicados de URL');
+
+    fetch('/api/maintenance/clean-url-duplicates', {
+        method: 'POST'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            updateProgress(100, 'Concluído!');
+            setTimeout(() => {
+                hideProgress();
+                alert(data.message);
+            }, 1000);
+        } else {
+            hideProgress();
+            alert('Erro: ' + (data.error || 'Erro desconhecido'));
+        }
+    })
+    .catch(error => {
+        hideProgress();
+        alert('Erro: ' + error);
+    });
+}
+
+function fixDuplicateQuality() {
+    if (!confirm('Deseja corrigir duplicatas por qualidade? Isso detectará duplicatas ignorando ano e qualidade, e marcará a pior qualidade como blacklist.')) {
+        return;
+    }
+
+    showProgress('Corrigindo Duplicatas por Qualidade...');
+
+    fetch('/api/maintenance/fix-duplicate-quality', {
+        method: 'POST'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            updateProgress(100, 'Concluído!');
+            setTimeout(() => {
+                hideProgress();
+                alert(data.message + '\n\nStats: ' + JSON.stringify(data.stats, null, 2));
+            }, 1000);
+        } else {
+            hideProgress();
+            alert('Erro: ' + (data.error || 'Erro desconhecido'));
+        }
+    })
+    .catch(error => {
+        hideProgress();
+        alert('Erro: ' + error);
+    });
+}
+
+function cleanExactDuplicates() {
+    if (!confirm('Deseja limpar duplicatas idênticas? Isso removerá registros com nomes idênticos, mantendo apenas uma cópia.')) {
+        return;
+    }
+
+    showProgress('Limpando Duplicatas Idênticas...');
+
+    fetch('/api/maintenance/clean-exact-duplicates', {
+        method: 'POST'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            updateProgress(100, 'Concluído!');
+            setTimeout(() => {
+                hideProgress();
+                alert(data.message + '\n\nStats: ' + JSON.stringify(data.stats, null, 2));
+            }, 1000);
+        } else {
+            hideProgress();
+            alert('Erro: ' + (data.error || 'Erro desconhecido'));
+        }
+    })
+    .catch(error => {
+        hideProgress();
+        alert('Erro: ' + error);
+    });
+}
+
+function blacklistDuplicatesLowestQuality() {
+    if (!confirm('Deseja fazer blacklist de duplicatas mantendo a MENOR qualidade? Isso identificará mídias com o mesmo nome (sem qualidade/ano) e marcará as de maior qualidade como blacklist. Prioridade: [L] > SD > HD > FHD > 4K > HDR.')) {
+        return;
+    }
+
+    showProgress('Blacklist Duplicatas (Menor Qualidade)...');
+
+    fetch('/api/maintenance/blacklist-duplicates-lowest-quality', {
+        method: 'POST'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            updateProgress(100, 'Concluído!');
+            setTimeout(() => {
+                hideProgress();
+                const stats = data.stats || {};
+                alert(data.message + '\n\n' +
+                      `Grupos processados: ${stats.total_groups_processed || 0}\n` +
+                      `Itens marcados como blacklist: ${stats.total_blacklisted || 0}`);
+            }, 1000);
+        } else {
+            hideProgress();
+            alert('Erro: ' + (data.error || 'Erro desconhecido'));
+        }
+    })
+    .catch(error => {
+        hideProgress();
+        alert('Erro: ' + error);
+    });
+}
+
+function cleanBlacklist() {
+    if (!confirm('Deseja limpar arquivos .strm de itens na blacklist? Isso removerá todos os arquivos da galeria que correspondem a itens marcados como blacklist=1 no banco de dados.')) {
+        return;
+    }
+
+    showProgress('Limpando Blacklist da Galeria');
+
+    fetch('/api/maintenance/clean-blacklist', {
+        method: 'POST'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            updateProgress(100, 'Concluído!');
+            setTimeout(() => {
+                hideProgress();
+                const stats = data.stats || {};
+                alert(data.message + '\n\n' +
+                      `Total de itens blacklist: ${stats.total_blacklist_items || 0}\n` +
+                      `Arquivos deletados: ${stats.deleted_files || 0}\n` +
+                      `Erros: ${stats.errors || 0}`);
+            }, 1000);
+        } else {
+            hideProgress();
+            alert('Erro: ' + (data.error || 'Erro desconhecido'));
+        }
+    })
+    .catch(error => {
+        hideProgress();
+        alert('Erro: ' + error);
+    });
+}
+
+function generateTVM3U() {
+    if (!confirm('Deseja gerar TV M3U + EPG compatíveis com Jellyfin? Isso usará todas as TVs da database que não estão na blacklist.')) {
+        return;
+    }
+
+    showProgress('Gerando TV M3U + EPG');
+
+    fetch('/api/maintenance/generate-tv-m3u', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            output_dir: 'jellyfin_package'
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            updateProgress(100, 'Concluído!');
+            setTimeout(() => {
+                hideProgress();
+                const stats = data.stats || {};
+                alert(data.message + '\n\n' +
+                      `Canais gerados: ${stats.total_channels || 0}\n` +
+                      `TV M3U: ${stats.m3u_path || 'N/A'} - ${stats.m3u_success ? '✅' : '❌'}\n` +
+                      `EPG XML: ${stats.epg_path || 'N/A'} - ${stats.epg_success ? '✅' : '❌'}`);
+            }, 1000);
+        } else {
+            hideProgress();
+            alert('Erro: ' + (data.error || 'Erro desconhecido'));
+        }
+    })
+    .catch(error => {
+        hideProgress();
+        alert('Erro: ' + error);
+    });
+}
+</script>
+{% endblock %}

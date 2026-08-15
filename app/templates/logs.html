@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block title %}Logs - Mestre IPTV Manager{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4">Logs</h1>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                Seletor de Arquivo de Log
+            </div>
+            <div class="card-body">
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-primary" onclick="loadLog('process.log')">process.log</button>
+                    <button type="button" class="btn btn-primary" onclick="loadLog('export.log')">export.log</button>
+                    <button type="button" class="btn btn-danger" onclick="filterErrorLogs()">error.log (Gerar)</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>Visualizador de Log</span>
+                <div>
+                    <button class="btn btn-sm btn-secondary" onclick="downloadLog()">Download</button>
+                    <button class="btn btn-sm btn-danger" onclick="clearLog()">Limpar</button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <input type="text" class="form-control" id="logSearch" placeholder="Buscar no log..." onkeyup="filterLog()">
+                </div>
+                <pre id="logContent" class="bg-dark text-light p-3" style="max-height: 500px; overflow-y: auto; white-space: pre-wrap; word-wrap: break-word;">Selecione um arquivo de log para visualizar</pre>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let currentLogFile = null;
+
+function loadLog(filename) {
+    currentLogFile = filename;
+    fetch(`/api/logs/content?file=${filename}`)
+        .then(response => response.text())
+        .then(data => {
+            document.getElementById('logContent').textContent = data;
+        })
+        .catch(error => {
+            document.getElementById('logContent').textContent = 'Erro ao carregar arquivo de log';
+        });
+}
+
+function filterErrorLogs() {
+    currentLogFile = 'error.log';
+    document.getElementById('logContent').textContent = 'Filtrando erros de process.log e export.log...';
+    
+    fetch('/api/logs/filter-errors')
+        .then(response => response.text())
+        .then(data => {
+            document.getElementById('logContent').textContent = data;
+        })
+        .catch(error => {
+            document.getElementById('logContent').textContent = 'Erro ao filtrar logs de erro';
+        });
+}
+
+function filterLog() {
+    const searchTerm = document.getElementById('logSearch').value.toLowerCase();
+    const logContent = document.getElementById('logContent');
+    const lines = logContent.textContent.split('\n');
+    
+    if (searchTerm === '') {
+        logContent.textContent = lines.join('\n');
+        return;
+    }
+    
+    const filteredLines = lines.filter(line => line.toLowerCase().includes(searchTerm));
+    logContent.textContent = filteredLines.join('\n');
+}
+
+function downloadLog() {
+    if (!currentLogFile) {
+        alert('Selecione um arquivo de log primeiro');
+        return;
+    }
+    
+    const logContent = document.getElementById('logContent').textContent;
+    const blob = new Blob([logContent], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = currentLogFile;
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+function clearLog() {
+    if (!currentLogFile) {
+        alert('Selecione um arquivo de log primeiro');
+        return;
+    }
+    
+    if (confirm(`Tem certeza que deseja limpar ${currentLogFile}?`)) {
+        fetch(`/api/logs/clear?file=${currentLogFile}`, { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('logContent').textContent = 'Arquivo de log limpo com sucesso';
+                } else {
+                    alert('Erro ao limpar arquivo de log');
+                }
+            });
+    }
+}
+</script>
+{% endblock %}

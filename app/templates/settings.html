@@ -1,0 +1,302 @@
+{% extends "base.html" %}
+
+{% block title %}Configurações - Mestre IPTV Manager{% endblock %}
+
+{% block content %}
+<div class="row fade-in">
+    <div class="col-12">
+        <h1 class="mb-4">
+            <i class="bi bi-gear-fill"></i> Configurações
+        </h1>
+    </div>
+</div>
+
+<!-- TMDB Configuration -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card fade-in" style="animation-delay: 0.1s;">
+            <div class="card-header">
+                <i class="bi bi-film"></i> TMDB Configuration
+            </div>
+            <div class="card-body">
+                <form id="tmdbForm" onsubmit="saveTMDBConfig(event)">
+                    <div class="mb-3">
+                        <label for="tmdbApiKey" class="form-label">
+                            <i class="bi bi-key"></i> TMDB API Key *
+                        </label>
+                        <input type="text" class="form-control" id="tmdbApiKey" placeholder="Insira sua chave API do TMDB">
+                        <div class="form-text">
+                            Obtenha sua chave em <a href="https://www.themoviedb.org/settings/api" target="_blank">themoviedb.org/settings/api</a>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="tmdbCacheDuration" class="form-label">
+                            <i class="bi bi-clock-history"></i> Duração do Cache TMDB (segundos)
+                        </label>
+                        <input type="number" class="form-control" id="tmdbCacheDuration" value="2592000">
+                        <div class="form-text">
+                            Padrão: 2592000 (30 dias). Configure 0 para desabilitar cache.
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save"></i> Salvar Configurações TMDB
+                        </button>
+                        <button type="button" class="btn btn-secondary" onclick="testTMDBKey()">
+                            <i class="bi bi-check-circle"></i> Testar API Key
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Database Configuration -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card fade-in" style="animation-delay: 0.2s;">
+            <div class="card-header">
+                <i class="bi bi-database"></i> Database Configuration
+            </div>
+            <div class="card-body">
+                <form id="dbForm" onsubmit="saveDBConfig(event)">
+                    <div class="mb-3">
+                        <label for="dbTimeout" class="form-label">
+                            <i class="bi bi-stopwatch"></i> Database Timeout (segundos)
+                        </label>
+                        <input type="number" class="form-control" id="dbTimeout" value="120">
+                        <div class="form-text">
+                            Tempo de espera para operações do banco. Padrão: 120 segundos.
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save"></i> Salvar Configurações Database
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Path Configuration -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card fade-in" style="animation-delay: 0.3s;">
+            <div class="card-header">
+                <i class="bi bi-folder"></i> Path Configuration
+            </div>
+            <div class="card-body">
+                <form id="pathForm" onsubmit="savePathConfig(event)">
+                    <div class="mb-3">
+                        <label for="galeriaPath" class="form-label">
+                            <i class="bi bi-images"></i> Caminho da Galeria *
+                        </label>
+                        <input type="text" class="form-control" id="galeriaPath" placeholder="D:/Galeria">
+                        <div class="form-text">
+                            Caminho onde os arquivos STRM serão exportados.
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save"></i> Salvar Configurações de Caminho
+                        </button>
+                        <button type="button" class="btn btn-secondary" onclick="testPath()">
+                            <i class="bi bi-check-circle"></i> Testar Caminho
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Load current configurations
+document.addEventListener('DOMContentLoaded', function() {
+    loadTMDBConfig();
+    loadDBConfig();
+    loadPathConfig();
+});
+
+function loadTMDBConfig() {
+    fetch('/api/settings/tmdb')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('tmdbApiKey').value = data.tmdb_api_key || '';
+                document.getElementById('tmdbCacheDuration').value = data.tmdb_cache_duration || 2592000;
+            }
+        })
+        .catch(error => {
+            console.error('Erro ao carregar configurações TMDB:', error);
+        });
+}
+
+function loadDBConfig() {
+    fetch('/api/settings/database')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('dbTimeout').value = data.db_timeout || 120;
+            }
+        })
+        .catch(error => {
+            console.error('Erro ao carregar configurações DB:', error);
+        });
+}
+
+function loadPathConfig() {
+    fetch('/api/settings/path')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('galeriaPath').value = data.galeria_path || '';
+            }
+        })
+        .catch(error => {
+            console.error('Erro ao carregar configurações de caminho:', error);
+        });
+}
+
+function saveTMDBConfig(event) {
+    event.preventDefault();
+
+    const config = {
+        tmdb_api_key: document.getElementById('tmdbApiKey').value,
+        tmdb_cache_duration: parseInt(document.getElementById('tmdbCacheDuration').value)
+    };
+
+    fetch('/api/settings/tmdb', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(config)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Configurações TMDB salvas com sucesso!');
+        } else {
+            alert('Erro ao salvar configurações: ' + (data.error || 'Erro desconhecido'));
+        }
+    })
+    .catch(error => {
+        alert('Erro ao salvar configurações: ' + error);
+    });
+}
+
+function saveDBConfig(event) {
+    event.preventDefault();
+
+    const config = {
+        db_timeout: parseInt(document.getElementById('dbTimeout').value)
+    };
+
+    fetch('/api/settings/database', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(config)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Configurações Database salvas com sucesso!');
+        } else {
+            alert('Erro ao salvar configurações: ' + (data.error || 'Erro desconhecido'));
+        }
+    })
+    .catch(error => {
+        alert('Erro ao salvar configurações: ' + error);
+    });
+}
+
+function savePathConfig(event) {
+    event.preventDefault();
+
+    const config = {
+        galeria_path: document.getElementById('galeriaPath').value
+    };
+
+    fetch('/api/settings/path', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(config)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Configurações de caminho salvas com sucesso!');
+        } else {
+            alert('Erro ao salvar configurações: ' + (data.error || 'Erro desconhecido'));
+        }
+    })
+    .catch(error => {
+        alert('Erro ao salvar configurações: ' + error);
+    });
+}
+
+function testTMDBKey() {
+    const apiKey = document.getElementById('tmdbApiKey').value;
+    if (!apiKey) {
+        alert('Por favor, insira uma API Key primeiro.');
+        return;
+    }
+
+    fetch('/api/settings/test-tmdb', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ tmdb_api_key: apiKey })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('API Key TMDB válida!');
+        } else {
+            alert('API Key inválida: ' + (data.error || 'Erro desconhecido'));
+        }
+    })
+    .catch(error => {
+        alert('Erro ao testar API Key: ' + error);
+    });
+}
+
+function testPath() {
+    const path = document.getElementById('galeriaPath').value;
+    if (!path) {
+        alert('Por favor, insira um caminho primeiro.');
+        return;
+    }
+
+    fetch('/api/settings/test-path', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ galeria_path: path })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Caminho válido e acessível!');
+        } else {
+            alert('Caminho inválido ou inacessível: ' + (data.error || 'Erro desconhecido'));
+        }
+    })
+    .catch(error => {
+        alert('Erro ao testar caminho: ' + error);
+    });
+}
+</script>
+{% endblock %}

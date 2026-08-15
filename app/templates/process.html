@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+
+{% block title %}Processo - Mestre IPTV Manager{% endblock %}
+
+{% block content %}
+<div class="row fade-in">
+    <div class="col-12">
+        <h1 class="mb-4">
+            <i class="bi bi-cpu"></i> Processo
+        </h1>
+    </div>
+</div>
+
+<!-- Control Buttons -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card fade-in" style="animation-delay: 0.1s;">
+            <div class="card-header">
+                <i class="bi bi-sliders"></i> Controles
+            </div>
+            <div class="card-body">
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-primary" onclick="startDownload()">
+                        <i class="bi bi-download"></i> BAIXAR
+                    </button>
+                    <button type="button" class="btn btn-success" onclick="startProcess()">
+                        <i class="bi bi-play-circle"></i> PROCESSAR
+                    </button>
+                    <button type="button" class="btn btn-warning" onclick="createVoid()" id="btnVoid">
+                        <i class="bi bi-box-arrow-right"></i> CRIAR VOID
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Progress Bar -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card fade-in" style="animation-delay: 0.2s;">
+            <div class="card-header">
+                <i class="bi bi-graph-up"></i> Progresso
+            </div>
+            <div class="card-body">
+                <div class="progress mb-3" style="height: 30px;">
+                    <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" style="width: 0%; min-width: 2em;">0%</div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <strong>Etapa Atual:</strong> <span id="currentStep">-</span>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Status:</strong> <span id="processStatus">Aguardando</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Real-time Log -->
+<div class="row">
+    <div class="col-12">
+        <div class="card fade-in" style="animation-delay: 0.3s;">
+            <div class="card-header">
+                <i class="bi bi-terminal"></i> Log em Tempo Real
+            </div>
+            <div class="card-body">
+                <pre id="logOutput" class="bg-dark text-light p-3" style="max-height: 400px; overflow-y: auto; border-radius: 8px; white-space: pre-wrap; word-wrap: break-word;">Aguardando início do processamento...</pre>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let progressSource = null;
+let logSource = null;
+
+function startDownload() {
+    fetch('/api/process/download', { method: 'POST' })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                startStreaming();
+            } else {
+                alert('Erro ao iniciar download');
+            }
+        });
+}
+
+function startProcess() {
+    fetch('/api/process/classify', { method: 'POST' })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                startStreaming();
+            } else {
+                alert('Erro ao iniciar processamento');
+            }
+        });
+}
+
+function createVoid() {
+    if (!confirm('Tem certeza que deseja criar o VOID (exportar para galeria)?')) {
+        return;
+    }
+    
+    fetch('/api/process/export', { method: 'POST' })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                startStreaming();
+            } else {
+                alert('Erro ao iniciar exportação');
+            }
+        });
+}
+
+function startStreaming() {
+    // Start progress polling (instead of SSE)
+    progressInterval = setInterval(function() {
+        fetch('/api/process/progress')
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    console.error('Progress error:', data.error);
+                    return;
+                }
+                document.getElementById('progressBar').style.width = data.progresso + '%';
+                document.getElementById('progressBar').textContent = data.progresso + '%';
+                document.getElementById('currentStep').textContent = data.etapa || '-';
+                document.getElementById('processStatus').textContent = data.status || 'Aguardando';
+                
+                // Always enable CRIAR VOID button (allow multiple exports)
+                document.getElementById('btnVoid').disabled = false;
+            });
+    }, 500);
+    
+    // Start log streaming
+    logSource = new EventSource('/api/process/logs');
+    logSource.onmessage = function(event) {
+        const logOutput = document.getElementById('logOutput');
+        logOutput.textContent += event.data;
+        logOutput.scrollTop = logOutput.scrollHeight;
+    };
+}
+
+// Check for existing process on page load
+window.onload = function() {
+    fetch('/api/process/status')
+        .then(response => response.json())
+        .then(data => {
+            if (data && data.status === 'running') {
+                startStreaming();
+            }
+        });
+};
+</script>
+{% endblock %}

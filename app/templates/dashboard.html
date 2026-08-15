@@ -1,0 +1,870 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Mestre IPTV Manager{% endblock %}
+
+{% block content %}
+<div class="row fade-in">
+    <div class="col-12">
+        <h1 class="mb-4">
+            <i class="bi bi-speedometer2"></i> Dashboard
+        </h1>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-4 col-lg-3 mb-3 fade-in" style="animation-delay: 0.1s;">
+        <div class="card stat-card">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <div class="stat-value">{{ stats.iptvs }}</div>
+                        <div class="stat-label">
+                            <i class="bi bi-broadcast"></i> IPTVs
+                        </div>
+                    </div>
+                    <div class="ms-3">
+                        <i class="bi bi-broadcast fs-1 text-muted"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 col-lg-3 mb-3 fade-in" style="animation-delay: 0.2s;">
+        <div class="card stat-card">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <div class="stat-value">{{ stats.midias }}</div>
+                        <div class="stat-label">
+                            <i class="bi bi-film"></i> Mídias
+                        </div>
+                    </div>
+                    <div class="ms-3">
+                        <i class="bi bi-film fs-1 text-muted"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 col-lg-3 mb-3 fade-in" style="animation-delay: 0.3s;">
+        <div class="card stat-card clickable" onclick="openCategoryModal('Filmes', 'Movie')">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <div class="stat-value">{{ stats.filmes }}</div>
+                        <div class="stat-label">
+                            <i class="bi bi-camera"></i> Filmes
+                        </div>
+                    </div>
+                    <div class="ms-3">
+                        <i class="bi bi-camera fs-1 text-muted"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 col-lg-3 mb-3 fade-in" style="animation-delay: 0.4s;">
+        <div class="card stat-card clickable" onclick="openCategoryModal('Séries', 'Series')">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <div class="stat-value">{{ stats.series_unique }}/{{ stats.series }}</div>
+                        <div class="stat-label">
+                            <i class="bi bi-tv"></i> Séries
+                        </div>
+                    </div>
+                    <div class="ms-3">
+                        <i class="bi bi-tv fs-1 text-muted"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 col-lg-3 mb-3 fade-in" style="animation-delay: 0.5s;">
+        <div class="card stat-card clickable" onclick="openCategoryModal('TV', 'TV')">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <div class="stat-value">{{ stats.tv }}</div>
+                        <div class="stat-label">
+                            <i class="bi bi-broadcast-tv"></i> TV
+                        </div>
+                    </div>
+                    <div class="ms-3">
+                        <i class="bi bi-broadcast-tv fs-1 text-muted"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 col-lg-3 mb-3 fade-in" style="animation-delay: 0.6s;">
+        <div class="card stat-card clickable" onclick="openCategoryModal('Novelas', 'Novela')">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <div class="stat-value">{{ stats.novela_unique }}/{{ stats.novela }}</div>
+                        <div class="stat-label">
+                            <i class="bi bi-heart"></i> Novelas
+                        </div>
+                    </div>
+                    <div class="ms-3">
+                        <i class="bi bi-heart fs-1 text-muted"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 col-lg-3 mb-3 fade-in" style="animation-delay: 0.7s;">
+        <div class="card stat-card clickable" onclick="openCategoryModal('Adulto', 'Adult')">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <div class="stat-value">{{ stats.adult }}</div>
+                        <div class="stat-label">
+                            <i class="bi bi-exclamation-triangle"></i> Adulto
+                        </div>
+                    </div>
+                    <div class="ms-3">
+                        <i class="bi bi-exclamation-triangle fs-1 text-muted"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 col-lg-3 mb-3 fade-in" style="animation-delay: 0.8s;">
+        <div class="card stat-card clickable" onclick="openCategoryModal('Educacional', 'Educational')">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <div class="stat-value">{{ stats.educational_unique }}/{{ stats.educational }}</div>
+                        <div class="stat-label">
+                            <i class="bi bi-book"></i> Educacional
+                        </div>
+                    </div>
+                    <div class="ms-3">
+                        <i class="bi bi-book fs-1 text-muted"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 col-lg-3 mb-3 fade-in" style="animation-delay: 0.9s;">
+        <div class="card stat-card clickable" onclick="openCategoryModal('Documentário', 'Documentary')">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <div class="stat-value">{{ stats.documentary_unique }}/{{ stats.documentary }}</div>
+                        <div class="stat-label">
+                            <i class="bi bi-play-circle"></i> Documentário
+                        </div>
+                    </div>
+                    <div class="ms-3">
+                        <i class="bi bi-play-circle fs-1 text-muted"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 col-lg-3 mb-3 fade-in" style="animation-delay: 1.0s;">
+        <div class="card stat-card clickable" onclick="openCategoryModal('Desenho', 'Cartoon')">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <div class="stat-value">{{ stats.cartoon_unique }}/{{ stats.cartoon }}</div>
+                        <div class="stat-label">
+                            <i class="bi bi-emoji-smile"></i> Desenho
+                        </div>
+                    </div>
+                    <div class="ms-3">
+                        <i class="bi bi-emoji-smile fs-1 text-muted"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 col-lg-3 mb-3 fade-in" style="animation-delay: 1.1s;">
+        <div class="card stat-card clickable" onclick="openCategoryModal('Esportes', 'Sports')">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <div class="stat-value">{{ stats.sports }}</div>
+                        <div class="stat-label">
+                            <i class="bi bi-trophy"></i> Esportes
+                        </div>
+                    </div>
+                    <div class="ms-3">
+                        <i class="bi bi-trophy fs-1 text-muted"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 col-lg-3 mb-3 fade-in" style="animation-delay: 1.2s;">
+        <div class="card stat-card clickable" onclick="openCategoryModal('Não exportados', null, null, false)">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <div class="stat-value">{{ stats.not_exported }}</div>
+                        <div class="stat-label">
+                            <i class="bi bi-files"></i> Não exportados
+                        </div>
+                    </div>
+                    <div class="ms-3">
+                        <i class="bi bi-files fs-1 text-muted"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 col-lg-3 mb-3 fade-in" style="animation-delay: 1.3s;">
+        <div class="card stat-card clickable" onclick="openCategoryModal('Blacklist', null, 1)">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <div class="stat-value">{{ stats.blacklist }}</div>
+                        <div class="stat-label">
+                            <i class="bi bi-x-circle"></i> Blacklist
+                        </div>
+                    </div>
+                    <div class="ms-3">
+                        <i class="bi bi-x-circle fs-1 text-muted"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 col-lg-3 mb-3 fade-in" style="animation-delay: 1.4s;">
+        <div class="card stat-card clickable" onclick="openCategoryModal('Exportados', null, null, true)">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <div class="stat-value">{{ stats.exportados }}</div>
+                        <div class="stat-label">
+                            <i class="bi bi-box-arrow-right"></i> Exportados
+                        </div>
+                    </div>
+                    <div class="ms-3">
+                        <i class="bi bi-box-arrow-right fs-1 text-muted"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 col-lg-3 mb-3 fade-in" style="animation-delay: 1.5s;">
+        <div class="card stat-card clickable" onclick="openCategoryModal('TMDB Cache', null, null, null, true)">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <div class="stat-value">{{ stats.tmdb_cache }}</div>
+                        <div class="stat-label">
+                            <i class="bi bi-database"></i> TMDB Cache
+                        </div>
+                    </div>
+                    <div class="ms-3">
+                        <i class="bi bi-database fs-1 text-muted"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Execution Metrics -->
+{% if last_execution %}
+<div class="row mb-4 fade-in">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-clock-history"></i> Última Execução
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 col-lg-2">
+                        <strong><i class="bi bi-play-circle"></i> Início:</strong> {{ last_execution.inicio }}
+                    </div>
+                    <div class="col-md-6 col-lg-2">
+                        <strong><i class="bi bi-stopwatch"></i> Duração:</strong> {{ last_execution.duracao_segundos }}s
+                    </div>
+                    <div class="col-md-6 col-lg-2">
+                        <strong><i class="bi bi-plus-circle"></i> Itens Novos:</strong> {{ last_execution.itens_novos }}
+                    </div>
+                    <div class="col-md-6 col-lg-3">
+                        <strong><i class="bi bi-dash-circle"></i> Itens Ignorados:</strong> {{ last_execution.itens_ignorados }}
+                    </div>
+                    <div class="col-md-6 col-lg-3">
+                        <strong><i class="bi bi-box-arrow-right"></i> Itens Exportados:</strong> {{ last_execution.itens_exportados }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Charts -->
+<div class="row mb-4">
+    <div class="col-md-6 mb-3 fade-in" style="animation-delay: 0.1s;">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-pie-chart"></i> Distribuição por Categoria
+            </div>
+            <div class="card-body">
+                <canvas id="categoryChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 mb-3 fade-in" style="animation-delay: 0.2s;">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-bar-chart"></i> Distribuição por Status
+            </div>
+            <div class="card-body">
+                <canvas id="statusChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="row fade-in" style="animation-delay: 0.3s;">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-activity"></i> Atividade Recente
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-dark table-striped">
+                        <thead>
+                            <tr>
+                                <th><i class="bi bi-list-task"></i> Etapa</th>
+                                <th><i class="bi bi-play-circle"></i> Início</th>
+                                <th><i class="bi bi-stop-circle"></i> Fim</th>
+                                <th><i class="bi bi-info-circle"></i> Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for activity in recent_activity %}
+                            <tr>
+                                <td>{{ activity.etapa }}</td>
+                                <td>{{ activity.inicio }}</td>
+                                <td>{{ activity.fim or '-' }}</td>
+                                <td>
+                                    {% if activity.status == 'completed' %}
+                                    <span class="badge bg-success">
+                                        <i class="bi bi-check-circle"></i> {{ activity.status }}
+                                    </span>
+                                    {% elif activity.status == 'running' %}
+                                    <span class="badge bg-warning pulse">
+                                        <i class="bi bi-hourglass-split"></i> {{ activity.status }}
+                                    </span>
+                                    {% else %}
+                                    <span class="badge bg-danger">
+                                        <i class="bi bi-x-circle"></i> {{ activity.status }}
+                                    </span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted">
+                                    <i class="bi bi-inbox"></i> Nenhuma atividade recente
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Category Modal -->
+<div class="modal fade" id="categoryModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="categoryModalTitle">Categoria</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Filters -->
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="blacklistToggle">
+                            <label class="form-check-label" for="blacklistToggle">Mostrar Blacklist</label>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <input type="text" id="searchInput" class="form-control" placeholder="Buscar mídia...">
+                    </div>
+                    <div class="col-md-4">
+                        <span class="text-muted">Selecionados: <strong id="selectedCount">0</strong></span>
+                    </div>
+                </div>
+
+                <!-- Bulk Action Buttons -->
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="selectAll()">
+                            <i class="bi bi-check-all"></i> Selecionar Todos
+                        </button>
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="deselectAll()">
+                            <i class="bi bi-x-circle"></i> Desmarcar Todos
+                        </button>
+                        <button type="button" class="btn btn-warning btn-sm" onclick="openChangeCategoryModal()">
+                            <i class="bi bi-arrow-left-right"></i> Trocar Categoria
+                        </button>
+                        <button type="button" class="btn btn-danger btn-sm" onclick="toggleBlacklistBatch()">
+                            <i class="bi bi-exclamation-triangle"></i> Blacklist (Lote)
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Table -->
+                <div class="table-responsive">
+                    <table class="table table-dark table-striped">
+                        <thead>
+                            <tr>
+                                <th style="width: 50px;">
+                                    <input type="checkbox" id="selectAllCheckbox" onclick="toggleSelectAll()">
+                                </th>
+                                <th>Nome</th>
+                                <th>IPTV</th>
+                                <th>Categoria</th>
+                                <th>Status</th>
+                                <th>Ano</th>
+                                <th>Ações</th>
+                            </tr>
+                            <tr>
+                                <th></th>
+                                <th><input type="text" class="form-control form-control-sm filter-input" data-column="nome" placeholder="Filtrar nome..."></th>
+                                <th><input type="text" class="form-control form-control-sm filter-input" data-column="iptv" placeholder="Filtrar IPTV..."></th>
+                                <th><input type="text" class="form-control form-control-sm filter-input" data-column="categoria" placeholder="Filtrar categoria..."></th>
+                                <th><select class="form-select form-select-sm filter-input" data-column="status">
+                                    <option value="">Todos</option>
+                                    <option value="Ativo">Ativo</option>
+                                    <option value="Inativo">Inativo</option>
+                                </select></th>
+                                <th><input type="text" class="form-control form-control-sm filter-input" data-column="ano" placeholder="Filtrar ano..."></th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="categoryTableBody">
+                            <tr>
+                                <td colspan="7" class="text-center">Carregando...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Change Category Modal -->
+<div class="modal fade" id="changeCategoryModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Trocar Categoria</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="newCategory" class="form-label">
+                        <i class="bi bi-arrow-left-right"></i> Nova Categoria
+                    </label>
+                    <select class="form-select" id="newCategory">
+                        <option value="Movie">Filmes</option>
+                        <option value="Series">Séries</option>
+                        <option value="TV">TV</option>
+                        <option value="Novela">Novelas</option>
+                        <option value="Adult">Adulto</option>
+                        <option value="Educational">Educacional</option>
+                        <option value="Documentary">Documentário</option>
+                        <option value="Cartoon">Desenho</option>
+                        <option value="Sports">Esportes</option>
+                    </select>
+                </div>
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> <strong id="selectedCountModal">0</strong> itens selecionados serão movidos para a nova categoria.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="confirmChangeCategory()">
+                    <i class="bi bi-check-circle"></i> Confirmar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+let allItems = [];
+let selectedItems = new Set();
+let currentCategory = null;
+let currentBlacklistFilter = null;
+let currentExportedFilter = null;
+let currentTmdbCacheFilter = null;
+let currentLimit = 500;
+
+// Initialize charts
+document.addEventListener('DOMContentLoaded', function() {
+    const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+    const statusCtx = document.getElementById('statusChart').getContext('2d');
+
+    // Category Chart
+    if (typeof Chart !== 'undefined' && categoryCtx) {
+        new Chart(categoryCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Filmes', 'Séries', 'TV', 'Novelas', 'Adulto'],
+                datasets: [{
+                    data: [
+                        {{ stats.filmes }},
+                        {{ stats.series }},
+                        {{ stats.tv }},
+                        {{ stats.novela }},
+                        {{ stats.adult }}
+                    ],
+                    backgroundColor: [
+                        'rgba(0, 164, 220, 0.8)',
+                        'rgba(124, 58, 237, 0.8)',
+                        'rgba(16, 185, 129, 0.8)',
+                        'rgba(245, 158, 11, 0.8)',
+                        'rgba(239, 68, 68, 0.8)'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    }
+
+    // Status Chart
+    if (typeof Chart !== 'undefined' && statusCtx) {
+        new Chart(statusCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Exportados', 'Não Exportados', 'Blacklist'],
+                datasets: [{
+                    label: 'Contagem',
+                    data: [
+                        {{ stats.exportados or 0 }},
+                        {{ stats.not_exported or 0 }},
+                        {{ stats.blacklist or 0 }}
+                    ],
+                    backgroundColor: [
+                        'rgba(16, 185, 129, 0.8)',
+                        'rgba(239, 68, 68, 0.8)',
+                        'rgba(245, 158, 11, 0.8)'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+    }
+
+    // Search input event
+    document.getElementById('searchInput').addEventListener('input', function() {
+        filterItems();
+    });
+
+    // Blacklist toggle event
+    document.getElementById('blacklistToggle').addEventListener('change', function() {
+        currentBlacklistFilter = this.checked ? null : 0;
+        loadCategoryData();
+    });
+
+    // Column filter events
+    document.querySelectorAll('.filter-input').forEach(input => {
+        input.addEventListener('input', function() {
+            filterItems();
+        });
+    });
+});
+
+function openCategoryModal(title, category, black_list = null, exported = null, tmdb_cache = null) {
+    currentCategory = category;
+    currentBlacklistFilter = black_list !== null ? black_list : 0;
+    currentExportedFilter = exported;
+    currentTmdbCacheFilter = tmdb_cache;
+    currentLimit = null; // Sem limite - exibir todos os itens
+    selectedItems.clear();
+
+    document.getElementById('categoryModalTitle').textContent = title;
+    document.getElementById('blacklistToggle').checked = black_list !== null;
+    document.getElementById('searchInput').value = '';
+    document.getElementById('selectAllCheckbox').checked = false;
+
+    // Limpar filtros de coluna
+    document.querySelectorAll('.filter-input').forEach(input => {
+        input.value = '';
+    });
+
+    const modal = new bootstrap.Modal(document.getElementById('categoryModal'));
+    modal.show();
+
+    loadCategoryData();
+}
+
+function loadCategoryData() {
+    fetch('/api/dashboard/category', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            category: currentCategory,
+            black_list: currentBlacklistFilter,
+            exported: currentExportedFilter,
+            tmdb_cache: currentTmdbCacheFilter,
+            limit: currentLimit
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            allItems = data.items;
+            filterItems();
+        } else {
+            alert('Erro ao carregar dados: ' + (data.error || 'Erro desconhecido'));
+        }
+    })
+    .catch(error => {
+        console.error('Erro ao carregar categoria:', error);
+        alert('Erro ao carregar dados. Verifique a conexão com o servidor.');
+    });
+}
+
+function filterItems() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const nomeFilter = document.querySelector('[data-column="nome"]').value.toLowerCase();
+    const iptvFilter = document.querySelector('[data-column="iptv"]').value.toLowerCase();
+    const categoriaFilter = document.querySelector('[data-column="categoria"]').value.toLowerCase();
+    const statusFilter = document.querySelector('[data-column="status"]').value;
+    const anoFilter = document.querySelector('[data-column="ano"]').value;
+
+    const filtered = allItems.filter(item => {
+        const matchesSearch = item.nome_da_midia.toLowerCase().includes(searchTerm);
+        const matchesNome = !nomeFilter || item.nome_da_midia.toLowerCase().includes(nomeFilter);
+        const matchesIptv = !iptvFilter || (item.iptv_nome && item.iptv_nome.toLowerCase().includes(iptvFilter));
+        const matchesCategoria = !categoriaFilter || item.categoria.toLowerCase().includes(categoriaFilter);
+        const matchesStatus = !statusFilter || (statusFilter === 'Ativo' ? item.status === 1 : item.status === 0);
+        const matchesAno = !anoFilter || (item.ano && item.ano.toString().includes(anoFilter));
+
+        return matchesSearch && matchesNome && matchesIptv && matchesCategoria && matchesStatus && matchesAno;
+    });
+    renderTable(filtered);
+}
+
+function renderTable(items) {
+    const tbody = document.getElementById('categoryTableBody');
+    tbody.innerHTML = '';
+
+    if (items.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center">Nenhum item encontrado</td></tr>';
+        updateSelectedCount();
+        return;
+    }
+
+    items.forEach(item => {
+        const row = document.createElement('tr');
+        const isSelected = selectedItems.has(item.id);
+        
+        row.innerHTML = `
+            <td>
+                <input type="checkbox" class="item-checkbox" value="${item.id}" ${isSelected ? 'checked' : ''} onchange="toggleSelectItem(${item.id})">
+            </td>
+            <td>${item.nome_da_midia}</td>
+            <td>${item.iptv_nome || '-'}</td>
+            <td>${item.categoria}</td>
+            <td><span class="badge ${item.status ? 'bg-success' : 'bg-danger'}">${item.status ? 'Ativo' : 'Inativo'}</span></td>
+            <td>${item.ano || '-'}</td>
+            <td>
+                <button class="btn btn-sm btn-warning" onclick="toggleBlacklist(${item.id})">
+                    ${item.black_list ? 'Remover Blacklist' : 'Adicionar Blacklist'}
+                </button>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+
+    updateSelectedCount();
+}
+
+function toggleSelectItem(id) {
+    if (selectedItems.has(id)) {
+        selectedItems.delete(id);
+    } else {
+        selectedItems.add(id);
+    }
+    updateSelectedCount();
+}
+
+function toggleSelectAll() {
+    const selectAll = document.getElementById('selectAllCheckbox').checked;
+    const checkboxes = document.querySelectorAll('.item-checkbox');
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = selectAll;
+        const id = parseInt(checkbox.value);
+        if (selectAll) {
+            selectedItems.add(id);
+        } else {
+            selectedItems.delete(id);
+        }
+    });
+    
+    updateSelectedCount();
+}
+
+function selectAll() {
+    const checkboxes = document.querySelectorAll('.item-checkbox');
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = true;
+        selectedItems.add(parseInt(checkbox.value));
+    });
+    document.getElementById('selectAllCheckbox').checked = true;
+    updateSelectedCount();
+}
+
+function deselectAll() {
+    const checkboxes = document.querySelectorAll('.item-checkbox');
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = false;
+    });
+    selectedItems.clear();
+    document.getElementById('selectAllCheckbox').checked = false;
+    updateSelectedCount();
+}
+
+function updateSelectedCount() {
+    document.getElementById('selectedCount').textContent = selectedItems.size;
+    document.getElementById('selectedCountModal').textContent = selectedItems.size;
+}
+
+function toggleBlacklist(id) {
+    fetch(`/api/media/items/${id}/blacklist`, { method: 'POST' })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Recarregar apenas os dados do modal em vez de reload da página
+                loadCategoryData();
+                // Remover o item da seleção se estiver selecionado
+                if (selectedItems.has(id)) {
+                    selectedItems.delete(id);
+                    updateSelectedCount();
+                }
+            } else {
+                alert('Erro ao atualizar blacklist: ' + (data.error || 'Erro desconhecido'));
+            }
+        })
+        .catch(error => {
+            console.error('Erro ao alternar blacklist:', error);
+            alert('Erro ao atualizar blacklist. Verifique a conexão com o servidor.');
+        });
+}
+
+function toggleBlacklistBatch() {
+    if (selectedItems.size === 0) {
+        alert('Selecione pelo menos um item');
+        return;
+    }
+
+    if (!confirm(`Deseja alternar o blacklist de ${selectedItems.size} itens selecionados?\n\nItens na blacklist serão removidos e itens fora da blacklist serão adicionados.`)) {
+        return;
+    }
+
+    fetch('/api/media/items/blacklist-batch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: Array.from(selectedItems) })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Recarregar apenas os dados do modal em vez de reload da página
+            loadCategoryData();
+            // Limpar a seleção após a operação
+            selectedItems.clear();
+            deselectAll();
+        } else {
+            alert('Erro ao alternar blacklist: ' + (data.error || 'Erro desconhecido'));
+        }
+    })
+    .catch(error => {
+        console.error('Erro ao alternar blacklist em lote:', error);
+        alert('Erro ao alternar blacklist. Verifique a conexão com o servidor.');
+    });
+}
+
+function openChangeCategoryModal() {
+    if (selectedItems.size === 0) {
+        alert('Selecione pelo menos um item');
+        return;
+    }
+
+    updateSelectedCount();
+    const modal = new bootstrap.Modal(document.getElementById('changeCategoryModal'));
+    modal.show();
+}
+
+function confirmChangeCategory() {
+    const newCategory = document.getElementById('newCategory').value;
+
+    fetch('/api/media/items/change-category-batch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            ids: Array.from(selectedItems),
+            category: newCategory
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Hide only the change category modal, keep the category modal open
+            const changeModal = bootstrap.Modal.getInstance(document.getElementById('changeCategoryModal'));
+            if (changeModal) changeModal.hide();
+
+            // Recarregar apenas os dados do modal em vez de reload da página
+            loadCategoryData();
+            // Limpar a seleção após a operação
+            selectedItems.clear();
+            deselectAll();
+        } else {
+            alert('Erro ao alterar categoria: ' + (data.error || 'Erro desconhecido'));
+        }
+    })
+    .catch(error => {
+        console.error('Erro ao alterar categoria:', error);
+        alert('Erro ao alterar categoria. Verifique a conexão com o servidor.');
+    });
+}
+</script>
+{% endblock %}

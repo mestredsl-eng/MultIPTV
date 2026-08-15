@@ -1,0 +1,347 @@
+{% extends "base.html" %}
+
+{% block title %}Cadastro - Mestre IPTV Manager{% endblock %}
+
+{% block content %}
+<div class="row fade-in">
+    <div class="col-12">
+        <h1 class="mb-4">
+            <i class="bi bi-person-plus"></i> Cadastro
+        </h1>
+    </div>
+</div>
+
+<!-- Registration Form -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card fade-in" style="animation-delay: 0.1s;">
+            <div class="card-header">
+                <i class="bi bi-plus-circle"></i> Nova Fonte IPTV
+            </div>
+            <div class="card-body">
+                <form id="iptvForm" onsubmit="saveIptv(event)">
+                    <div class="mb-3">
+                        <label for="nome" class="form-label">
+                            <i class="bi bi-tag"></i> Nome *
+                        </label>
+                        <input type="text" class="form-control" id="nome" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="urlM3u" class="form-label">
+                            <i class="bi bi-link-45deg"></i> URL M3U *
+                        </label>
+                        <input type="url" class="form-control" id="urlM3u" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="urlEpg" class="form-label">
+                            <i class="bi bi-calendar-event"></i> URL EPG *
+                        </label>
+                        <input type="url" class="form-control" id="urlEpg" required>
+                    </div>
+                    <div class="mb-3">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save"></i> Salvar
+                        </button>
+                        <button type="button" class="btn btn-secondary" onclick="testUrls()">
+                            <i class="bi bi-check-circle"></i> Testar URLs
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Existing Sources -->
+<div class="row">
+    <div class="col-12">
+        <div class="card fade-in" style="animation-delay: 0.2s;">
+            <div class="card-header">
+                <i class="bi bi-list-ul"></i> Fontes Existentes
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-dark table-striped">
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>URL M3U</th>
+                                <th>URL EPG</th>
+                                <th>Última Atualização</th>
+                                <th>Status</th>
+                                <th>Conexão</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="iptvTableBody">
+                            <tr>
+                                <td colspan="7" class="text-center">Carregando...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Remove Confirmation Modal -->
+<div class="modal fade" id="removeModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar Remoção</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Tem certeza que deseja remover esta IPTV?</p>
+                <div class="mb-3">
+                    <label for="confirmName" class="form-label">Digite o nome da IPTV para confirmar:</label>
+                    <input type="text" class="form-control" id="confirmName" onkeyup="checkConfirmation()">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="btnConfirmRemove" disabled>Confirmar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let currentIptvName = '';
+let currentIptvId = '';
+
+// Load IPTV sources on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadIptvSources();
+});
+
+function loadIptvSources() {
+    fetch('/api/iptv/sources')
+        .then(response => response.json())
+        .then(data => {
+            const tbody = document.getElementById('iptvTableBody');
+            tbody.innerHTML = '';
+            
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center">Nenhuma fonte IPTV cadastrada</td></tr>';
+                return;
+            }
+            
+            data.forEach(iptv => {
+                const row = document.createElement('tr');
+                
+                // Escapar nome para evitar problemas com aspas
+                const escapedNome = iptv.nome.replace(/'/g, "\\'").replace(/"/g, '\\"');
+                
+                row.innerHTML = `
+                    <td>${iptv.nome}</td>
+                    <td><a href="${iptv.url_m3u}" target="_blank" class="text-info">${iptv.url_m3u.substring(0, 50)}...</a></td>
+                    <td><a href="${iptv.url_epg}" target="_blank" class="text-info">${iptv.url_epg.substring(0, 50)}...</a></td>
+                    <td>${iptv.ultima_atualizacao || '-'}</td>
+                    <td><span class="badge ${iptv.ativo ? 'bg-success' : 'bg-danger'}">${iptv.ativo ? 'Ativo' : 'Inativo'}</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-info" onclick="testIptvConnection(${iptv.id}, '${escapedNome}')" id="testBtn-${iptv.id}">
+                            <i class="bi bi-activity"></i> Testar
+                        </button>
+                        <span id="testStatus-${iptv.id}" class="ms-2"></span>
+                    </td>
+                    <td>
+                        <button class="btn btn-sm ${iptv.ativo ? 'btn-warning' : 'btn-success'}" onclick="toggleIptvStatus(${iptv.id}, ${iptv.ativo})">
+                            <i class="bi bi-power"></i> ${iptv.ativo ? 'Desativar' : 'Ativar'}
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="showRemoveModal('${escapedNome}', ${iptv.id})">
+                            <i class="bi bi-trash"></i> Remover
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        })
+        .catch(error => {
+            console.error('Error loading IPTV sources:', error);
+            document.getElementById('iptvTableBody').innerHTML = '<tr><td colspan="7" class="text-center text-danger">Erro ao carregar fontes IPTV</td></tr>';
+        });
+}
+
+function showRemoveModal(iptvName, iptvId) {
+    currentIptvName = iptvName;
+    currentIptvId = iptvId;
+    document.getElementById('confirmName').value = '';
+    document.getElementById('btnConfirmRemove').disabled = true;
+    
+    const modal = new bootstrap.Modal(document.getElementById('removeModal'));
+    modal.show();
+}
+
+function toggleIptvStatus(iptvId, currentStatus) {
+    const action = currentStatus ? 'desativar' : 'ativar';
+    
+    if (!confirm(`Deseja ${action} esta fonte IPTV?`)) {
+        return;
+    }
+    
+    fetch(`/api/iptv/sources/${iptvId}/toggle-status`, {
+        method: 'POST'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(`Fonte IPTV ${action}a com sucesso`);
+            loadIptvSources(); // Reload the table
+        } else {
+            alert(`Erro ao ${action} IPTV: ` + (data.error || 'Erro desconhecido'));
+        }
+    })
+    .catch(error => {
+        alert(`Erro ao ${action} IPTV: ` + error);
+    });
+}
+
+function checkConfirmation() {
+    const inputName = document.getElementById('confirmName').value;
+    document.getElementById('btnConfirmRemove').disabled = (inputName !== currentIptvName);
+}
+
+document.getElementById('btnConfirmRemove').addEventListener('click', function() {
+    fetch(`/api/iptv/sources/${currentIptvId}`, {
+        method: 'DELETE'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const modal = bootstrap.Modal.getInstance(document.getElementById('removeModal'));
+            modal.hide();
+            
+            let message = `IPTV removida com sucesso!`;
+            if (data.affected_media > 0) {
+                message += `\n- ${data.affected_media} mídias removidas do banco de dados`;
+            }
+            if (data.files_removed > 0) {
+                message += `\n- ${data.files_removed} arquivos .strm removidos da galeria`;
+            }
+            
+            alert(message);
+            loadIptvSources(); // Reload the table
+        } else {
+            alert('Erro ao remover IPTV: ' + (data.error || 'Erro desconhecido'));
+        }
+    })
+    .catch(error => {
+        alert('Erro ao remover IPTV: ' + error);
+    });
+});
+
+function saveIptv(event) {
+    event.preventDefault();
+    
+    const nome = document.getElementById('nome').value;
+    const urlM3u = document.getElementById('urlM3u').value;
+    const urlEpg = document.getElementById('urlEpg').value;
+    
+    // Validate URLs
+    if (!isValidUrl(urlM3u) || !isValidUrl(urlEpg)) {
+        alert('URLs inválidas');
+        return;
+    }
+    
+    // Check for duplicates
+    fetch('/api/iptv/check-duplicate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nome })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.exists) {
+            alert('Já existe uma IPTV com este nome');
+            return;
+        }
+        
+        // Save IPTV
+        fetch('/api/iptv/sources', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nome, url_m3u: urlM3u, url_epg: urlEpg })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('IPTV cadastrada com sucesso');
+                document.getElementById('iptvForm').reset();
+                loadIptvSources(); // Reload the table
+            } else {
+                alert('Erro ao cadastrar IPTV');
+            }
+        });
+    });
+}
+
+function testUrls() {
+    const urlM3u = document.getElementById('urlM3u').value;
+    const urlEpg = document.getElementById('urlEpg').value;
+    
+    if (!urlM3u || !urlEpg) {
+        alert('Preencha as URLs primeiro');
+        return;
+    }
+    
+    alert('Testando URLs... (implementação pendente)');
+}
+
+function testIptvConnection(iptvId, iptvName) {
+    const testBtn = document.getElementById(`testBtn-${iptvId}`);
+    const statusSpan = document.getElementById(`testStatus-${iptvId}`);
+    
+    // Disable button and show loading
+    testBtn.disabled = true;
+    testBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Testando...';
+    statusSpan.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span>';
+    
+    fetch(`/api/iptv/sources/${iptvId}/test-connection`, {
+        method: 'POST'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            if (data.status === 'online') {
+                statusSpan.innerHTML = `<span class="badge bg-success"><i class="bi bi-check-circle"></i> ${data.message}</span>`;
+            } else {
+                statusSpan.innerHTML = `<span class="badge bg-danger"><i class="bi bi-x-circle"></i> ${data.message}</span>`;
+            }
+        } else {
+            statusSpan.innerHTML = `<span class="badge bg-warning"><i class="bi bi-exclamation-triangle"></i> ${data.error}</span>`;
+        }
+    })
+    .catch(error => {
+        console.error('Error testing IPTV connection:', error);
+        statusSpan.innerHTML = `<span class="badge bg-danger"><i class="bi bi-x-circle"></i> Erro: ${error}</span>`;
+    })
+    .finally(() => {
+        // Re-enable button
+        testBtn.disabled = false;
+        testBtn.innerHTML = '<i class="bi bi-activity"></i> Testar';
+    });
+}
+
+function isValidUrl(string) {
+    try {
+        const url = new URL(string);
+        // Prevent malicious URLs (javascript:, data:, etc.)
+        if (url.protocol === 'javascript:' || url.protocol === 'data:') {
+            return false;
+        }
+        // Only allow http and https
+        if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+            return false;
+        }
+        return true;
+    } catch (_) {
+        return false;
+    }
+}
+</script>
+{% endblock %}
